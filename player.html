@@ -271,7 +271,7 @@
   <footer>Football World Cup 2026 Live &mdash; Personal use only.</footer>
 
   <script>
-    var STREAM_URL = 'http://localhost:5500/stream';
+    var STREAM_URL = window.location.origin + '/stream';
     var video      = document.getElementById('video');
     var statusEl   = document.getElementById('status-text');
     var retryBtn   = document.getElementById('retry-btn');
