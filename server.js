@@ -6,7 +6,12 @@ const { URL } = require('url');
 
 const PORT        = process.env.PORT || 5500;
 const ROOT        = __dirname;
-const STREAM_URL  = 'http://rgkkw.live/live/1Aoen7elp5/IgMJ60tmAa/747283.ts';
+const STREAM_URL  = process.env.STREAM_URL || 'http://rgkkw.live/live/1Aoen7elp5/IgMJ60tmAa/747283.ts';
+
+// Timeout in ms for each upstream hop (30s to handle slow CDN nodes)
+const HOP_TIMEOUT = 30000;
+// Max retries on socket hang-up / timeout before giving up
+const MAX_RETRIES  = 3;
 
 const mime = {
   '.html': 'text/html',
@@ -17,11 +22,11 @@ const mime = {
   '.ico':  'image/x-icon',
 };
 
-// Follow redirects and pipe final response to client
-function proxyStream(targetUrl, res, hops) {
+// ─── Proxy with redirect-following, retry, and generous timeout ───────────────
+
+function proxyStream(targetUrl, res, hops, retriesLeft) {
   if (hops > 10) {
-    res.writeHead(502);
-    res.end('Too many redirects');
+    if (!res.headersSent) { res.writeHead(502); res.end('Too many redirects'); }
     return;
   }
 
@@ -32,14 +37,19 @@ function proxyStream(targetUrl, res, hops) {
     port:     parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
     path:     parsed.pathname + parsed.search,
     method:   'GET',
+    // Disguise as a real browser / media player
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-      'Accept':     '*/*',
-      'Connection': 'keep-alive',
-    }
+      'User-Agent':      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+      'Accept':          '*/*',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Referer':         `http://${parsed.hostname}/`,
+      'Connection':      'keep-alive',
+    },
   };
 
   console.log(`[hop ${hops}] Fetching: ${targetUrl}`);
+
+  let timedOut = false;
 
   const req = lib.request(options, (streamRes) => {
     console.log(`Status: ${streamRes.statusCode}`);
@@ -50,7 +60,18 @@ function proxyStream(targetUrl, res, hops) {
       console.log(`Redirecting to: ${location}`);
       streamRes.resume();
       const nextUrl = location.startsWith('http') ? location : new URL(location, targetUrl).href;
-      proxyStream(nextUrl, res, hops + 1);
+      proxyStream(nextUrl, res, hops + 1, MAX_RETRIES);
+      return;
+    }
+
+    // Non-2xx from upstream — log and bail
+    if (streamRes.statusCode < 200 || streamRes.statusCode >= 300) {
+      console.error(`Upstream returned ${streamRes.statusCode}`);
+      streamRes.resume();
+      if (!res.headersSent) {
+        res.writeHead(streamRes.statusCode);
+        res.end(`Upstream error: ${streamRes.statusCode}`);
+      }
       return;
     }
 
@@ -62,21 +83,32 @@ function proxyStream(targetUrl, res, hops) {
       'Transfer-Encoding':           'chunked',
     });
     streamRes.pipe(res);
+
+    streamRes.on('error', (e) => {
+      console.error('Stream read error:', e.message);
+    });
   });
 
-  // Fail fast if upstream is unreachable
-  req.setTimeout(10000, () => {
-    console.error('Upstream timed out');
+  req.setTimeout(HOP_TIMEOUT, () => {
+    timedOut = true;
+    console.error(`Upstream timed out (hop ${hops}, retries left: ${retriesLeft})`);
     req.destroy();
-    if (!res.headersSent) {
+    if (retriesLeft > 0) {
+      console.log(`Retrying… (${retriesLeft} left)`);
+      proxyStream(targetUrl, res, hops, retriesLeft - 1);
+    } else if (!res.headersSent) {
       res.writeHead(504);
-      res.end('Upstream timeout');
+      res.end('Upstream timeout after retries');
     }
   });
 
   req.on('error', (e) => {
+    if (timedOut) return; // already handled by setTimeout
     console.error('Request error:', e.message);
-    if (!res.headersSent) {
+    if (retriesLeft > 0) {
+      console.log(`Retrying after error… (${retriesLeft} left)`);
+      proxyStream(targetUrl, res, hops, retriesLeft - 1);
+    } else if (!res.headersSent) {
       res.writeHead(502);
       res.end('Proxy error: ' + e.message);
     }
@@ -84,6 +116,8 @@ function proxyStream(targetUrl, res, hops) {
 
   req.end();
 }
+
+// ─── HTTP server ──────────────────────────────────────────────────────────────
 
 http.createServer((req, res) => {
   const reqPath = new URL(req.url, 'http://localhost').pathname;
@@ -104,9 +138,11 @@ http.createServer((req, res) => {
     return;
   }
 
-  // Proxy route
+  // Proxy route — supports ?url= override for testing alternate stream URLs
   if (reqPath === '/stream') {
-    proxyStream(STREAM_URL, res, 1);
+    const qs  = new URL(req.url, 'http://localhost').searchParams;
+    const url = qs.get('url') || STREAM_URL;
+    proxyStream(url, res, 1, MAX_RETRIES);
     return;
   }
 
