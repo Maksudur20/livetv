@@ -271,6 +271,67 @@
   <footer>Football World Cup 2026 Live &mdash; Personal use only.</footer>
 
   <script>
+    // ── Anti-Inspect Protection ──────────────────────────────────────────
+    (function () {
+
+      // 1. Block right-click
+      document.addEventListener('contextmenu', function (e) {
+        e.preventDefault();
+      });
+
+      // 2. Block keyboard shortcuts
+      document.addEventListener('keydown', function (e) {
+        // F12
+        if (e.key === 'F12') { e.preventDefault(); return false; }
+        // Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+Shift+C
+        if (e.ctrlKey && e.shiftKey && ['I','i','J','j','C','c'].includes(e.key)) {
+          e.preventDefault(); return false;
+        }
+        // Ctrl+U (view source)
+        if (e.ctrlKey && ['U','u'].includes(e.key)) {
+          e.preventDefault(); return false;
+        }
+        // Ctrl+S (save page)
+        if (e.ctrlKey && ['S','s'].includes(e.key)) {
+          e.preventDefault(); return false;
+        }
+      });
+
+      // 3. Detect DevTools via window size difference
+      var devtoolsOpen = false;
+      var threshold    = 160;
+      function checkDevTools() {
+        var widthDiff  = window.outerWidth  - window.innerWidth;
+        var heightDiff = window.outerHeight - window.innerHeight;
+        if (widthDiff > threshold || heightDiff > threshold) {
+          if (!devtoolsOpen) {
+            devtoolsOpen = true;
+            document.body.innerHTML =
+              '<div style="display:flex;align-items:center;justify-content:center;' +
+              'height:100vh;background:#0a0a0f;color:#ef4444;font-family:Inter,sans-serif;' +
+              'font-size:1.5rem;font-weight:700;text-align:center;">' +
+              '🚫 Access Denied</div>';
+          }
+        } else {
+          devtoolsOpen = false;
+        }
+      }
+      setInterval(checkDevTools, 1000);
+
+      // 4. Debugger trap — slows down DevTools console
+      setInterval(function () { (function () { })['constructor']('debugger')(); }, 50);
+
+      // 5. Clear console continuously
+      setInterval(function () {
+        console.clear();
+        console.log('%cAccess Denied', 'color:red;font-size:40px;font-weight:bold;');
+      }, 500);
+
+    })();
+    // ────────────────────────────────────────────────────────────────────
+  </script>
+
+  <script>
     var STREAM_URL = window.location.origin + '/stream';
     var video      = document.getElementById('video');
     var statusEl   = document.getElementById('status-text');
