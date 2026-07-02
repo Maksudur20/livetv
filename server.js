@@ -12,6 +12,9 @@ const mime = {
   '.html': 'text/html',
   '.css':  'text/css',
   '.js':   'application/javascript',
+  '.png':  'image/png',
+  '.jpg':  'image/jpeg',
+  '.ico':  'image/x-icon',
 };
 
 // Follow redirects and pipe final response to client
