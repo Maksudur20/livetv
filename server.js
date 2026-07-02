@@ -4,7 +4,7 @@ const fs    = require('fs');
 const path  = require('path');
 const { URL } = require('url');
 
-const PORT        = 5500;
+const PORT        = process.env.PORT || 5500;
 const ROOT        = __dirname;
 const STREAM_URL  = 'http://rgkkw.live/live/1Aoen7elp5/IgMJ60tmAa/747283.ts';
 
