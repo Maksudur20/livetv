@@ -160,4 +160,18 @@ http.createServer((req, res) => {
 }).listen(PORT, () => {
   console.log('Server  → http://localhost:' + PORT);
   console.log('Stream  → http://localhost:' + PORT + '/stream');
+
+  // ── Self-ping every 10 min to prevent Render free tier from sleeping ──────
+  const SELF_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+  setInterval(() => {
+    const pingLib = SELF_URL.startsWith('https') ? https : http;
+    pingLib.get(`${SELF_URL}/ping`, (r) => {
+      console.log(`[keep-alive] ping → ${r.statusCode}`);
+      r.resume();
+    }).on('error', (e) => console.error('[keep-alive] ping failed:', e.message));
+  }, 10 * 60 * 1000); // every 10 minutes
 });
+
+// ── Prevent crashes from killing the whole process ────────────────────────────
+process.on('uncaughtException',  (err) => console.error('[uncaughtException]',  err));
+process.on('unhandledRejection', (err) => console.error('[unhandledRejection]', err));
