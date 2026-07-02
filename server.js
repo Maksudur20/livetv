@@ -48,9 +48,7 @@ function proxyStream(targetUrl, res, hops) {
     if ([301, 302, 303, 307, 308].includes(streamRes.statusCode)) {
       const location = streamRes.headers['location'];
       console.log(`Redirecting to: ${location}`);
-      // Drain the response body
       streamRes.resume();
-      // Resolve relative redirects
       const nextUrl = location.startsWith('http') ? location : new URL(location, targetUrl).href;
       proxyStream(nextUrl, res, hops + 1);
       return;
@@ -64,6 +62,16 @@ function proxyStream(targetUrl, res, hops) {
       'Transfer-Encoding':           'chunked',
     });
     streamRes.pipe(res);
+  });
+
+  // Fail fast if upstream is unreachable
+  req.setTimeout(10000, () => {
+    console.error('Upstream timed out');
+    req.destroy();
+    if (!res.headersSent) {
+      res.writeHead(504);
+      res.end('Upstream timeout');
+    }
   });
 
   req.on('error', (e) => {
@@ -86,6 +94,13 @@ http.createServer((req, res) => {
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
     res.end();
+    return;
+  }
+
+  // Keep-alive ping endpoint (prevents Render free tier from sleeping)
+  if (reqPath === '/ping') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('pong');
     return;
   }
 

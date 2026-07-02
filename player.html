@@ -342,14 +342,11 @@
       }
       setInterval(checkDevTools, 1000);
 
-      // 4. Debugger trap — slows down DevTools console
-      setInterval(function () { (function () { })['constructor']('debugger')(); }, 50);
-
-      // 5. Clear console continuously
+      // 4. Clear console periodically (not too aggressively — avoids JS thread stalling)
       setInterval(function () {
         console.clear();
         console.log('%cAccess Denied', 'color:red;font-size:40px;font-weight:bold;');
-      }, 500);
+      }, 5000);
 
     })();
     // ────────────────────────────────────────────────────────────────────
@@ -375,8 +372,11 @@
       player = null;
     }
 
+    var connectTimer = null;
+
     function initPlayer() {
       destroyPlayer();
+      if (connectTimer) { clearTimeout(connectTimer); connectTimer = null; }
       retryBtn.style.display = 'none';
       setStatus('Initializing player\u2026');
 
@@ -387,20 +387,47 @@
 
       try {
         player = mpegts.createPlayer({
-          type:   'mse',
-          isLive: true,
-          url:    STREAM_URL
+          type:              'mse',
+          isLive:            true,
+          url:               STREAM_URL,
+          enableWorker:      true,
+          liveBufferLatencyChasing: true,
+          liveBufferLatencyMaxLatency: 1.5,
+          liveBufferLatencyMinRemain: 0.3
         });
 
         player.attachMediaElement(video);
         player.load();
-        setStatus('Connecting to stream\u2026', 'warn');
+        setStatus('Connecting to stream\u2026 (this may take a few seconds)', 'warn');
 
-        video.play()
-          .then(function() { setStatus('\u25B6 Playing live stream', 'ok'); })
-          .catch(function() { setStatus('\u26A0 Autoplay blocked \u2014 press play on the player', 'warn'); });
+        // Auto-retry if stream doesn't start within 15 seconds
+        connectTimer = setTimeout(function () {
+          if (video.readyState < 3) {
+            setStatus('\u23F1 Slow connection \u2014 retrying\u2026', 'warn');
+            initPlayer();
+          }
+        }, 15000);
 
-        player.on(mpegts.Events.ERROR, function(type, detail) {
+        // Update status when stream metadata is received
+        player.on(mpegts.Events.MEDIA_INFO, function () {
+          if (connectTimer) { clearTimeout(connectTimer); connectTimer = null; }
+          setStatus('\u25B6 Stream ready \u2014 starting playback\u2026', 'ok');
+          video.play()
+            .then(function () { setStatus('\u25B6 Playing live stream', 'ok'); })
+            .catch(function () { setStatus('\u26A0 Autoplay blocked \u2014 press play on the player', 'warn'); });
+        });
+
+        // Show live stats when playing
+        player.on(mpegts.Events.STATISTICS_INFO, function (info) {
+          if (video.paused || video.ended) return;
+          if (info && info.speed !== undefined) {
+            var kbps = Math.round(info.speed / 1024 * 8);
+            setStatus('\u25B6 Playing live stream \u2014 ' + kbps + ' kbps', 'ok');
+          }
+        });
+
+        player.on(mpegts.Events.ERROR, function (type, detail) {
+          if (connectTimer) { clearTimeout(connectTimer); connectTimer = null; }
           setStatus('Stream error: ' + type + ' \u2013 ' + detail, 'error');
           retryBtn.style.display = 'inline-block';
         });
@@ -412,6 +439,11 @@
     }
 
     initPlayer();
+
+    // Keep server awake (prevents Render free-tier cold start delays)
+    setInterval(function () {
+      fetch('/ping').catch(function () {});
+    }, 5 * 60 * 1000); // every 5 minutes
   </script>
 
 </body>
