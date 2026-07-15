@@ -4,14 +4,13 @@ const fs    = require('fs');
 const path  = require('path');
 const { URL } = require('url');
 
-const PORT        = process.env.PORT || 5500;
-const ROOT        = __dirname;
-const STREAM_URL  = process.env.STREAM_URL || 'http://rgkkw.live/live/1Aoen7elp5/IgMJ60tmAa/747283.ts';
+const PORT = process.env.PORT || 5500;
+const ROOT = __dirname;
 
 // Timeout in ms for each upstream hop (30s to handle slow CDN nodes)
 const HOP_TIMEOUT = 30000;
 // Max retries on socket hang-up / timeout before giving up
-const MAX_RETRIES  = 3;
+const MAX_RETRIES = 3;
 
 const mime = {
   '.html': 'text/html',
@@ -30,19 +29,25 @@ function proxyStream(targetUrl, res, hops, retriesLeft) {
     return;
   }
 
-  const parsed  = new URL(targetUrl);
+  let parsed;
+  try {
+    parsed = new URL(targetUrl);
+  } catch(e) {
+    if (!res.headersSent) { res.writeHead(400); res.end('Invalid URL'); }
+    return;
+  }
+
   const lib     = parsed.protocol === 'https:' ? https : http;
   const options = {
     hostname: parsed.hostname,
     port:     parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
     path:     parsed.pathname + parsed.search,
     method:   'GET',
-    // Disguise as a real browser / media player
     headers: {
       'User-Agent':      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
       'Accept':          '*/*',
       'Accept-Language': 'en-US,en;q=0.9',
-      'Referer':         `http://${parsed.hostname}/`,
+      'Referer':         `${parsed.protocol}//${parsed.hostname}/`,
       'Connection':      'keep-alive',
     },
   };
@@ -103,7 +108,7 @@ function proxyStream(targetUrl, res, hops, retriesLeft) {
   });
 
   req.on('error', (e) => {
-    if (timedOut) return; // already handled by setTimeout
+    if (timedOut) return;
     console.error('Request error:', e.message);
     if (retriesLeft > 0) {
       console.log(`Retrying after error… (${retriesLeft} left)`);
@@ -131,18 +136,48 @@ http.createServer((req, res) => {
     return;
   }
 
-  // Keep-alive ping endpoint (prevents Render free tier from sleeping)
+  // Keep-alive ping endpoint
   if (reqPath === '/ping') {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end('pong');
     return;
   }
 
-  // Proxy route — supports ?url= override for testing alternate stream URLs
+  // Generic stream proxy — /proxy?url=<encoded_stream_url>
+  // Used as CORS bypass for IPTV streams blocked cross-origin
+  if (reqPath === '/proxy') {
+    const qs  = new URL(req.url, 'http://localhost').searchParams;
+    const url = qs.get('url');
+    if (!url) {
+      res.writeHead(400);
+      res.end('Missing ?url= parameter');
+      return;
+    }
+    proxyStream(decodeURIComponent(url), res, 1, MAX_RETRIES);
+    return;
+  }
+
+  // Legacy single-stream proxy (kept for backward compatibility)
   if (reqPath === '/stream') {
     const qs  = new URL(req.url, 'http://localhost').searchParams;
-    const url = qs.get('url') || STREAM_URL;
-    proxyStream(url, res, 1, MAX_RETRIES);
+    const url = qs.get('url');
+    if (!url) {
+      res.writeHead(400);
+      res.end('Missing ?url= parameter — use /stream?url=<encoded_url>');
+      return;
+    }
+    proxyStream(decodeURIComponent(url), res, 1, MAX_RETRIES);
+    return;
+  }
+
+  // /admin route — serves same player.html, frontend JS detects pathname
+  // and triggers admin password modal automatically
+  if (reqPath === '/admin') {
+    fs.readFile(path.join(ROOT, 'player.html'), (err, data) => {
+      if (err) { res.writeHead(404); res.end('Not found'); return; }
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(data);
+    });
     return;
   }
 
@@ -159,7 +194,7 @@ http.createServer((req, res) => {
 
 }).listen(PORT, () => {
   console.log('Server  → http://localhost:' + PORT);
-  console.log('Stream  → http://localhost:' + PORT + '/stream');
+  console.log('Proxy   → http://localhost:' + PORT + '/proxy?url=<encoded_stream_url>');
 
   // ── Self-ping every 10 min to prevent Render free tier from sleeping ──────
   const SELF_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;

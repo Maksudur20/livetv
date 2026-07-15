@@ -1,450 +1,1524 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>&#x26BD; Football World Cup 2026 &ndash; Live Stream</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>LiveTV – Watch Live Channels</title>
+  <meta name="description" content="Watch live TV channels online free. Premium IPTV streaming."/>
+  <meta property="og:type"        content="website"/>
+  <meta property="og:site_name"   content="LiveTV"/>
+  <meta property="og:title"       content="LiveTV – Live Stream"/>
+  <meta property="og:description" content="Watch live TV channels free online."/>
+  <meta property="og:image"       content="/logo.png"/>
+  <meta property="og:url"         content="https://livetv-tktz.onrender.com/"/>
+  <meta name="twitter:card"  content="summary_large_image"/>
+  <meta name="twitter:title" content="LiveTV – Live Stream"/>
+  <meta name="twitter:image" content="/logo.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.7/dist/hls.min.js"></script>
 
-  <!-- ── Open Graph (Facebook, WhatsApp, Telegram, etc.) ── -->
-  <meta property="og:type"        content="website" />
-  <meta property="og:site_name"   content="World Cup 2026 Live" />
-  <meta property="og:title"       content="⚽ Football World Cup 2026 – Live Stream" />
-  <meta property="og:description" content="Watch the FIFA World Cup 2026 live in 4K quality. Free live stream powered by beIN Sports." />
-  <meta property="og:image"       content="https://livetv-tktz.onrender.com/FIFA-World-Cup-Logo-2026.png" />
-  <meta property="og:image:width"  content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta property="og:url"         content="https://livetv-tktz.onrender.com/" />
+<style>
+/* ════════════════════════════════════════════════════
+   DESIGN TOKENS & RESET
+════════════════════════════════════════════════════ */
+:root {
+  --bg:        #07070f;
+  --bg2:       #0c0c1a;
+  --bg3:       #111124;
+  --bg4:       #18182e;
+  --bg5:       #1e1e38;
+  --glass:     rgba(255,255,255,0.03);
+  --glass2:    rgba(255,255,255,0.06);
+  --border:    rgba(255,255,255,0.06);
+  --border2:   rgba(124,92,252,0.3);
+  --border3:   rgba(0,212,255,0.2);
+  --pri:       #7c5cfc;
+  --pri2:      #9d7dff;
+  --pri3:      #c4abff;
+  --cyan:      #00d4ff;
+  --cyan2:     #67e8f9;
+  --ok:        #22c55e;
+  --warn:      #f59e0b;
+  --danger:    #ef4444;
+  --txt:       #eeeeff;
+  --txt2:      #8892b0;
+  --txt3:      #3d4a6e;
+  --r:         14px;
+  --r-sm:      9px;
+  --r-xs:      6px;
+  --t:         0.18s ease;
+  --glow-pri:  0 0 24px rgba(124,92,252,0.35);
+  --glow-cyan: 0 0 24px rgba(0,212,255,0.25);
+  --shadow:    0 20px 60px rgba(0,0,0,0.6);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--bg);
+  color:var(--txt);
+  min-height:100vh;
+  overflow:hidden;
+  -webkit-user-select:none;
+  user-select:none;
+}
 
-  <!-- ── Twitter / X Card ── -->
-  <meta name="twitter:card"        content="summary_large_image" />
-  <meta name="twitter:title"       content="⚽ Football World Cup 2026 – Live Stream" />
-  <meta name="twitter:description" content="Watch the FIFA World Cup 2026 live in 4K quality. Free live stream." />
-  <meta name="twitter:image"       content="https://livetv-tktz.onrender.com/FIFA-World-Cup-Logo-2026.png" />
+/* Background subtle grid */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(124,92,252,0.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(124,92,252,0.03) 1px,transparent 1px);
+  background-size:50px 50px;
+  pointer-events:none;z-index:0;
+}
 
-  <!-- ── General SEO ── -->
-  <meta name="description" content="Watch Football World Cup 2026 live stream free online in 4K HD quality." />
+/* ── Loading Bar ─────────────────────────────── */
+#loadingBar{
+  position:fixed;top:0;left:0;width:100%;height:2px;z-index:9999;
+  background:linear-gradient(90deg,var(--pri),var(--cyan),var(--pri));
+  background-size:200% 100%;
+  transform:scaleX(0);transform-origin:left;
+  opacity:0;transition:opacity 0.2s;
+}
+#loadingBar.show{
+  transform:scaleX(1);opacity:1;
+  animation:loadSlide 1.6s ease-in-out infinite;
+}
+@keyframes loadSlide{
+  0%{background-position:0% 0%;}
+  100%{background-position:200% 0%;}
+}
 
-  <!-- mpegts.js from CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.min.js"></script>
+/* ── MODALS ────────────────────────────────────── */
+.modal-bg{
+  display:none;position:fixed;inset:0;z-index:2000;
+  background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);
+  align-items:center;justify-content:center;
+}
+.modal-bg.on{display:flex;}
+.modal-card{
+  background:var(--bg3);
+  border:1px solid var(--border2);
+  border-radius:22px;
+  padding:2.5rem 2.2rem;
+  width:min(92vw,420px);
+  box-shadow:var(--shadow),var(--glow-pri);
+  animation:popIn .28s cubic-bezier(.34,1.56,.64,1);
+  position:relative;overflow:hidden;
+}
+.modal-card::before{
+  content:'';position:absolute;top:-60px;right:-60px;
+  width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(124,92,252,0.12) 0%,transparent 70%);
+  pointer-events:none;
+}
+@keyframes popIn{
+  from{opacity:0;transform:scale(.84) translateY(24px);}
+  to  {opacity:1;transform:scale(1)   translateY(0);}
+}
+.modal-card h2{
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:1.3rem;font-weight:800;color:var(--txt);margin-bottom:1.6rem;
+}
+.modal-card h2 .hi{color:var(--pri2);}
 
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+/* ── HEADER ──────────────────────────────────── */
+header{
+  position:relative;z-index:50;
+  background:rgba(7,7,15,0.85);
+  backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--border);
+  padding:.45rem 1.2rem;
+  display:flex;align-items:center;gap:10px;
+  height:44px;flex-shrink:0;
+}
+.hdr-logo{
+  width:28px;height:28px;border-radius:7px;
+  object-fit:cover;flex-shrink:0;
+  box-shadow:var(--glow-pri);
+  transition:transform .3s;
+}
+.hdr-logo:hover{transform:scale(1.1) rotate(-4deg);}
+.hdr-brand h1{
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:.88rem;font-weight:800;line-height:1;
+  background:linear-gradient(90deg,var(--pri2) 0%,var(--cyan) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hdr-brand p{font-size:.55rem;color:var(--txt3);margin-top:2px;letter-spacing:.4px;}
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+.live-pill{
+  display:flex;align-items:center;gap:4px;
+  background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);
+  border-radius:20px;padding:3px 8px;
+  font-size:.6rem;font-weight:700;color:#fb7185;letter-spacing:1.2px;
+}
+.live-dot{
+  width:6px;height:6px;background:#ef4444;border-radius:50%;
+  box-shadow:0 0 6px #ef4444;
+  animation:livePulse 1.5s ease-in-out infinite;
+}
+@keyframes livePulse{
+  0%,100%{opacity:1;transform:scale(1);}
+  50%{opacity:.4;transform:scale(1.5);}
+}
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background: #0a0a0f;
-      color: #e8e8f0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+#syncStatus{
+  margin-left:auto;font-size:.62rem;color:var(--txt3);
+  display:flex;align-items:center;gap:4px;cursor:default;
+  transition:color .3s;
+}
 
-    /* Header */
-    header {
-      width: 100%;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-      border-bottom: 1px solid #1e3a5f;
-      padding: 1.2rem 2rem;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      box-shadow: 0 4px 30px rgba(0,0,0,0.5);
-    }
+/* ── LAYOUT ──────────────────────────────────── */
+.app{
+  display:grid;
+  grid-template-columns:260px 1fr;
+  height:calc(100vh - 44px);
+  position:relative;z-index:1;
+  overflow:hidden;
+}
 
-    .logo { font-size: 2rem; }
+/* ════════════════════════════════
+   SIDEBAR
+════════════════════════════════ */
+.sidebar{
+  background:var(--bg2);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  box-shadow:4px 0 30px rgba(0,0,0,0.4);
+}
 
-    .header-text h1 {
-      font-size: 1.3rem;
-      font-weight: 700;
-      background: linear-gradient(90deg, #fff, #a0c4ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+.sidebar-head{
+  padding:.5rem .6rem;
+  border-bottom:1px solid var(--border);
+  display:flex;flex-direction:column;gap:.4rem;
+  flex-shrink:0;
+  background:linear-gradient(180deg,rgba(124,92,252,.04) 0%,transparent 100%);
+}
 
-    .header-text p {
-      font-size: 0.78rem;
-      color: #6b8cba;
-      margin-top: 2px;
-    }
+/* Search */
+.srch-wrap{position:relative;}
+.srch-wrap svg{
+  position:absolute;left:10px;top:50%;transform:translateY(-50%);
+  width:14px;height:14px;color:var(--txt3);pointer-events:none;
+}
+#channel-search{
+  width:100%;padding:6px 10px 6px 30px;
+  background:var(--bg4);border:1px solid var(--border);
+  border-radius:var(--r-sm);color:var(--txt);
+  font-size:.74rem;font-family:'Inter',sans-serif;
+  transition:var(--t);
+}
+#channel-search:focus{outline:none;border-color:var(--border2);box-shadow:0 0 0 2px rgba(124,92,252,.1);}
+#channel-search::placeholder{color:var(--txt3);}
 
-    .live-badge {
-      margin-left: auto;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(220,38,38,0.15);
-      border: 1px solid rgba(220,38,38,0.4);
-      border-radius: 20px;
-      padding: 5px 12px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: #f87171;
-      letter-spacing: 1px;
-    }
+/* Category tabs - horizontal scroll */
+.cat-scroll{
+  display:flex;gap:5px;overflow-x:auto;padding-bottom:2px;
+}
+.cat-scroll::-webkit-scrollbar{height:0;}
+.cat-tab{
+  flex-shrink:0;padding:3px 9px;border-radius:20px;
+  font-size:.6rem;font-weight:600;cursor:pointer;
+  background:var(--bg5);border:1px solid var(--border);
+  color:var(--txt2);transition:var(--t);white-space:nowrap;
+}
+.cat-tab:hover{background:rgba(124,92,252,.15);color:var(--pri3);border-color:var(--border2);}
+.cat-tab.active{
+  background:linear-gradient(135deg,var(--pri),#5b3fd4);
+  border-color:var(--pri);color:#fff;
+  box-shadow:0 2px 10px rgba(124,92,252,.3);
+}
 
-    .live-dot {
-      width: 8px;
-      height: 8px;
-      background: #ef4444;
-      border-radius: 50%;
-      animation: pulse 1.4s infinite;
-    }
+/* Channel count */
+.ch-count-row{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:.65rem;color:var(--txt3);padding:0 2px;
+}
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50%       { opacity: 0.4; transform: scale(1.3); }
-    }
+/* Select-all row (admin) */
+#selectAllWrap{
+  display:none;align-items:center;gap:8px;
+  font-size:.72rem;color:var(--txt2);
+  padding:6px 10px;border-radius:var(--r-sm);
+  background:rgba(124,92,252,.06);border:1px solid rgba(124,92,252,.15);
+}
+#selectAllWrap label{cursor:pointer;}
+#selectedCountDisplay{margin-left:auto;color:var(--pri2);font-weight:700;}
 
-    /* Main */
-    main {
-      width: 100%;
-      max-width: 1000px;
-      padding: 2rem 1.5rem;
-    }
+/* Channel List */
+#listbar{flex:1;overflow-y:auto;padding:6px;}
+#listbar::-webkit-scrollbar{width:3px;}
+#listbar::-webkit-scrollbar-track{background:transparent;}
+#listbar::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:2px;}
 
-    /* Player Card */
-    .player-card {
-      background: #111827;
-      border: 1px solid #1f2d44;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 25px 60px rgba(0,0,0,0.7);
-    }
+.ch-item{
+  display:flex;align-items:center;gap:7px;
+  padding:5px 7px;border-radius:var(--r-sm);
+  cursor:pointer;transition:all var(--t);
+  position:relative;margin-bottom:1px;
+  border:1px solid transparent;
+}
+.ch-item::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
+  border-radius:2px 0 0 2px;background:var(--pri);
+  opacity:0;transform:scaleY(0);
+  transition:all .2s cubic-bezier(.34,1.56,.64,1);
+}
+.ch-item:hover{background:var(--glass2);border-color:var(--border);}
+.ch-item:hover::before{opacity:.7;transform:scaleY(.6);}
+.ch-item.playing{
+  background:rgba(124,92,252,.1);
+  border-color:var(--border2);
+}
+.ch-item.playing::before{opacity:1;transform:scaleY(1);}
+.ch-item.hidden-ch{opacity:.35;}
 
-    .player-wrap {
-      position: relative;
-      background: #000;
-      aspect-ratio: 16/9;
-    }
+.ch-logo{
+  width:32px;height:32px;border-radius:6px;
+  object-fit:contain;background:var(--bg4);flex-shrink:0;
+  padding:3px;border:1px solid var(--border);
+  transition:transform .2s;
+}
+.ch-item:hover .ch-logo{transform:scale(1.05);}
+.ch-item.playing .ch-logo{
+  box-shadow:0 0 8px rgba(124,92,252,.4);
+  border-color:rgba(124,92,252,.4);
+}
 
-    video {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
+.ch-info{flex:1;min-width:0;}
+.ch-name{
+  font-size:.74rem;font-weight:600;color:var(--txt);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:color .2s;
+}
+.ch-item:hover .ch-name,.ch-item.playing .ch-name{color:#fff;}
+.ch-cat{font-size:.58rem;color:var(--txt3);margin-top:1px;}
 
-    /* Status Bar */
-    .status-bar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 0.85rem 1.2rem;
-      background: #0d1117;
-      border-top: 1px solid #1f2d44;
-    }
+.ch-right{display:flex;gap:4px;align-items:center;flex-shrink:0;}
+.badge{
+  font-size:.56rem;font-weight:700;padding:2px 7px;border-radius:10px;
+  letter-spacing:.5px;text-transform:uppercase;
+}
+.b-on {background:rgba(34,197,94,.12);color:var(--ok);  border:1px solid rgba(34,197,94,.25);}
+.b-off{background:rgba(239,68,68,.12);color:var(--danger);border:1px solid rgba(239,68,68,.25);}
+.b-unk{background:var(--glass);color:var(--txt3);border:1px solid var(--border);}
+.b-hid{background:rgba(245,158,11,.1);color:var(--warn);border:1px solid rgba(245,158,11,.25);}
 
-    #status-text {
-      font-size: 0.82rem;
-      color: #94a3b8;
-      flex: 1;
-    }
+.ch-select-cb{width:15px;height:15px;cursor:pointer;accent-color:var(--pri);flex-shrink:0;}
 
-    #status-text.ok    { color: #4ade80; }
-    #status-text.error { color: #f87171; }
-    #status-text.warn  { color: #facc15; }
+.ch-acts{display:none;gap:3px;align-items:center;}
+.ch-item:hover .ch-acts{display:flex;}
+.ch-act-btn{
+  background:var(--bg4);border:1px solid var(--border);
+  border-radius:5px;padding:3px 7px;cursor:pointer;
+  font-size:.62rem;color:var(--txt2);transition:var(--t);
+}
+.ch-act-btn:hover{background:var(--glass2);color:var(--txt);}
+.ch-act-btn.del:hover{background:rgba(239,68,68,.15);color:var(--danger);border-color:rgba(239,68,68,.3);}
 
-    #retry-btn {
-      display: none;
-      padding: 6px 16px;
-      background: linear-gradient(135deg, #3b82f6, #6366f1);
-      border: none;
-      border-radius: 8px;
-      color: #fff;
-      font-size: 0.8rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
-    #retry-btn:hover { opacity: 0.85; }
+/* Delete selected bar */
+#deleteSelectedBar{
+  display:none;align-items:center;gap:6px;flex-shrink:0;
+  padding:5px 8px;
+  background:rgba(239,68,68,.07);
+  border-top:1px solid rgba(239,68,68,.2);
+  font-size:.68rem;color:var(--txt2);
+}
+#deleteSelectedBar.on{display:flex;}
 
-    /* Channel Info Row */
-    .channel-info {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem 1.2rem;
-      background: #0d1117;
-      border-top: 1px solid #1f2d44;
-    }
+/* Empty state */
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;padding:3rem 1rem;color:var(--txt3);text-align:center;
+}
+.empty-state svg{opacity:.25;}
+.empty-state p{font-size:.8rem;}
 
-    .channel-logo {
-      width: 48px;
-      height: 48px;
-      border-radius: 10px;
-      object-fit: contain;
-      background: #1e293b;
-      padding: 4px;
-    }
+/* ════════════════════════════════
+   MAIN CONTENT
+════════════════════════════════ */
+.main{
+  display:flex;flex-direction:column;overflow:hidden;
+  background:var(--bg);
+}
 
-    .channel-details h2 {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: #e2e8f0;
-    }
+/* Player — takes all remaining height, no aspect-ratio forcing scroll */
+.player-wrap{
+  position:relative;background:#000;
+  flex:1;min-height:0;
+  overflow:hidden;
+}
+#videoEl{width:100%;height:100%;display:block;object-fit:contain;}
 
-    .channel-details p {
-      font-size: 0.75rem;
-      color: #64748b;
-      margin-top: 3px;
-    }
+/* Overlay */
+.overlay{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  background:radial-gradient(ellipse at center,rgba(15,15,28,.98) 0%,rgba(7,7,15,1) 100%);
+  transition:opacity .5s ease,visibility .5s ease;
+}
+.overlay.off{opacity:0;visibility:hidden;pointer-events:none;}
+.overlay-logo{
+  width:72px;height:72px;border-radius:16px;
+  box-shadow:var(--glow-pri);
+  animation:ovLogoPulse 3s ease-in-out infinite;
+}
+@keyframes ovLogoPulse{
+  0%,100%{box-shadow:0 0 20px rgba(124,92,252,.3);}
+  50%{box-shadow:0 0 40px rgba(124,92,252,.6);}
+}
+.overlay-title{
+  font-size:.95rem;font-weight:600;color:var(--txt2);
+  display:flex;align-items:center;gap:8px;
+}
+.overlay-hint{font-size:.72rem;color:var(--txt3);}
 
-    /* Info Box */
-    .info-box {
-      margin-top: 1.5rem;
-      background: #111827;
-      border: 1px solid #1f2d44;
-      border-radius: 14px;
-      padding: 1.2rem 1.5rem;
-    }
+/* Spinner when loading */
+.spinner{
+  width:32px;height:32px;border:3px solid rgba(124,92,252,.2);
+  border-top-color:var(--pri);border-radius:50%;
+  animation:spin .7s linear infinite;display:none;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.spinner.on{display:block;}
 
-    .info-box h3 {
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: #60a5fa;
-      margin-bottom: 0.8rem;
-    }
+/* Now Playing bar — compact 40px */
+.np-bar{
+  flex-shrink:0;height:40px;
+  display:flex;align-items:center;gap:8px;
+  padding:0 10px;
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  border-top:1px solid rgba(255,255,255,.03);
+}
+.np-logo{
+  width:26px;height:26px;border-radius:5px;
+  object-fit:contain;background:var(--bg4);padding:2px;
+  border:1px solid var(--border);flex-shrink:0;
+}
+.np-info{flex:1;min-width:0;}
+#now-playing-title{
+  font-size:.75rem;font-weight:700;color:var(--txt);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.np-meta{display:flex;align-items:center;gap:5px;margin-top:1px;}
+#channel-category-badge{
+  font-size:.55rem;font-weight:700;padding:1px 6px;
+  background:rgba(124,92,252,.12);border:1px solid var(--border2);
+  border-radius:10px;color:var(--pri2);display:none;
+}
+.np-status-text{font-size:.6rem;color:var(--txt3);transition:color .3s;}
+.np-status-text.ok  {color:var(--ok);}
+.np-status-text.err {color:var(--danger);}
+.np-status-text.warn{color:var(--warn);}
 
-    .info-box ul {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
+.np-kbps{
+  margin-left:auto;font-size:.58rem;color:var(--txt3);
+  font-variant-numeric:tabular-nums;white-space:nowrap;
+}
 
-    .info-box li {
-      font-size: 0.8rem;
-      color: #94a3b8;
-      display: flex;
-      gap: 8px;
-    }
+/* Info area — no scroll, compact, fixed height */
+.info-wrap{
+  flex-shrink:0;overflow:hidden;
+  padding:.5rem .8rem;
+}
 
-    .info-box li::before {
-      content: '›';
-      color: #3b82f6;
-      font-weight: 700;
-    }
+/* Stats — single compact row */
+.stats-row{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
+}
+.stat-card{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:6px 10px;
+  display:flex;align-items:center;gap:8px;
+  transition:border-color .2s;position:relative;overflow:hidden;
+}
+.stat-card::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.02) 0%,transparent 100%);
+  pointer-events:none;
+}
+.stat-card:hover{border-color:var(--border2);}
+.stat-lbl{font-size:.58rem;color:var(--txt3);text-transform:uppercase;letter-spacing:.4px;}
+.stat-val{font-size:1.1rem;font-weight:900;color:var(--txt);line-height:1;margin-left:auto;}
+.stat-val.ok   {color:var(--ok);}
+.stat-val.warn {color:var(--warn);}
+.stat-val.danger{color:var(--danger);}
 
-    footer {
-      margin-top: auto;
-      padding: 1.2rem;
-      font-size: 0.72rem;
-      color: #334155;
-      text-align: center;
-    }
-  </style>
+/* ════════════════════════════════
+   ADMIN PANEL — Full-screen modal overlay, no inline scroll
+════════════════════════════════ */
+#adminModal{
+  display:none;position:fixed;inset:0;z-index:1500;
+  background:rgba(0,0,0,.82);backdrop-filter:blur(12px);
+  align-items:flex-start;justify-content:center;
+  padding:1rem;
+  overflow-y:auto;
+}
+#adminModal.on{display:flex;}
+#adminModal::-webkit-scrollbar{width:4px;}
+#adminModal::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:2px;}
+
+#adminPanel{
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:20px;padding:1.2rem;
+  width:min(96vw,860px);margin:auto;
+  box-shadow:var(--shadow),0 0 60px rgba(124,92,252,.15);
+  animation:popIn .25s ease;
+}
+
+.adm-header{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;
+  background:linear-gradient(135deg,rgba(124,92,252,.1),rgba(0,212,255,.05));
+  border:1px solid var(--border2);
+  border-radius:var(--r-sm);margin-bottom:.8rem;
+}
+.adm-header svg{color:var(--pri2);}
+.adm-header h2{font-size:.85rem;font-weight:800;color:var(--txt);}
+.adm-header p{font-size:.65rem;color:var(--txt2);margin-top:1px;}
+.adm-close-btn{
+  margin-left:auto;background:rgba(239,68,68,.12);
+  border:1px solid rgba(239,68,68,.25);border-radius:var(--r-sm);
+  padding:4px 10px;font-size:.68rem;color:var(--danger);cursor:pointer;
+  transition:var(--t);
+}
+.adm-close-btn:hover{background:rgba(239,68,68,.22);}
+
+/* Admin panel inner grid: 2 columns */
+.adm-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:.6rem;
+}
+.adm-grid .adm-section.full{grid-column:1/-1;}
+
+.adm-section{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:.8rem;margin:0;
+  transition:border-color .2s;
+}
+.adm-section:hover{border-color:rgba(124,92,252,.15);}
+.adm-sec-title{
+  font-size:.64rem;font-weight:700;color:var(--pri2);
+  text-transform:uppercase;letter-spacing:1px;
+  margin-bottom:.6rem;display:flex;align-items:center;gap:5px;
+}
+
+/* Form */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.fg{display:flex;flex-direction:column;gap:3px;}
+.fg.full{grid-column:1/-1;}
+.fg label{font-size:.6rem;font-weight:600;color:var(--txt3);}
+.fi{
+  background:var(--bg4);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:5px 9px;
+  color:var(--txt);font-size:.74rem;font-family:'Inter',sans-serif;
+  transition:var(--t);width:100%;
+}
+.fi:focus{outline:none;border-color:var(--border2);box-shadow:0 0 0 2px rgba(124,92,252,.1);}
+.fi::placeholder{color:var(--txt3);}
+textarea.fi{min-height:55px;resize:vertical;}
+
+/* Buttons */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  padding:5px 12px;border-radius:var(--r-sm);border:none;
+  font-size:.7rem;font-weight:600;cursor:pointer;
+  transition:all var(--t);font-family:'Inter',sans-serif;
+}
+.btn-pri{
+  background:linear-gradient(135deg,var(--pri),#5138cc);color:#fff;
+  box-shadow:0 3px 10px rgba(124,92,252,.3);
+}
+.btn-pri:hover{opacity:.88;transform:translateY(-1px);}
+.btn-ghost{background:var(--bg4);border:1px solid var(--border);color:var(--txt2);}
+.btn-ghost:hover{background:var(--bg5);color:var(--txt);}
+.btn-danger{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--danger);}
+.btn-danger:hover{background:rgba(239,68,68,.2);}
+.btn-ok{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:var(--ok);}
+.btn-ok:hover{background:rgba(34,197,94,.2);}
+.btn-sm{padding:3px 9px;font-size:.65rem;}
+.btn-row{display:flex;gap:5px;flex-wrap:wrap;align-items:center;}
+
+.adm-divider{height:1px;background:var(--border);margin:.5rem 0;}
+
+.result-msg{font-size:.65rem;color:var(--txt2);margin-top:5px;min-height:14px;}
+
+/* Check modal */
+#checkResultsModal{
+  display:none;position:fixed;inset:0;z-index:2000;
+  background:rgba(0,0,0,.78);backdrop-filter:blur(10px);
+  align-items:center;justify-content:center;
+}
+#checkResultsModal.on{display:flex;}
+.check-box{
+  background:var(--bg3);border:1px solid var(--border2);
+  border-radius:20px;padding:1.5rem;
+  width:min(92vw,500px);max-height:80vh;
+  display:flex;flex-direction:column;
+  box-shadow:var(--shadow);animation:popIn .25s ease;
+}
+#checkResultsList{
+  overflow-y:auto;flex:1;margin:.8rem 0;
+  display:flex;flex-direction:column;gap:5px;
+}
+.cr-item{
+  padding:7px 11px;border-radius:var(--r-sm);font-size:.76rem;
+}
+.cr-item.ok {background:rgba(34,197,94,.1);color:var(--ok);}
+.cr-item.bad{background:rgba(239,68,68,.1);color:var(--danger);}
+
+/* PW change */
+.pw-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end;}
+#passwordChangeMsg{font-size:.72rem;margin-top:6px;min-height:16px;}
+
+/* Compat hidden spans */
+#totalChannels,#activeCount,#hiddenCount,#offlineCount,
+#adminModeStatus,#totalChannelCount{display:none;}
+
+/* ── Scrollbar global ────────────────────────── */
+*{scrollbar-width:thin;scrollbar-color:var(--bg5) transparent;}
+
+/* ── Responsive ──────────────────────────────── */
+@media(max-width:768px){
+  .app{grid-template-columns:1fr;grid-template-rows:45vh 55vh;}
+  .sidebar{height:100%;border-right:none;border-top:1px solid var(--border);}
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .form-grid{grid-template-columns:1fr;}
+  .pw-grid{grid-template-columns:1fr;}
+}
+
+/* ── Micro-animations ────────────────────────── */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(10px);}
+  to  {opacity:1;transform:translateY(0);}
+}
+.ch-item{animation:fadeUp .2s ease both;}
+</style>
 </head>
 <body>
 
-  <header>
-    <div class="logo">&#x26BD;</div>
-    <div class="header-text">
-      <h1>Football World Cup 2026</h1>
-      <p>Live Stream Player &middot; 4K Quality</p>
+<!-- Loading Bar -->
+<div id="loadingBar"></div>
+
+<!-- Admin Password Modal -->
+<div class="modal-bg" id="passwordModal">
+  <div class="modal-card">
+    <h2>🔐 <span class="hi">Admin</span> Login</h2>
+    <div class="fg" style="margin-bottom:1.2rem;">
+      <label>Password</label>
+      <input type="password" id="adminPassword" class="fi" placeholder="Enter admin password…" autocomplete="off"/>
     </div>
-    <div class="live-badge">
-      <span class="live-dot"></span>
-      LIVE
+    <div class="btn-row">
+      <button class="btn btn-pri" id="unlockBtn">Unlock Panel</button>
+      <button class="btn btn-ghost" id="cancelModalBtn">Cancel</button>
     </div>
-  </header>
+    <p id="passwordError" style="color:var(--danger);font-size:.72rem;margin-top:8px;min-height:16px;"></p>
+  </div>
+</div>
 
-  <main>
-    <div class="player-card">
-      <div class="player-wrap">
-        <video id="video" controls autoplay muted playsinline></video>
+<!-- Online Check Results Modal -->
+<div id="checkResultsModal">
+  <div class="check-box">
+    <div style="font-weight:700;color:var(--txt);font-size:.9rem;">📡 Stream Check Results</div>
+    <div id="checkResultsList"></div>
+    <button class="btn btn-ghost btn-sm" id="closeResultsBtn" style="align-self:flex-end;">Close</button>
+  </div>
+</div>
+
+<!-- Header -->
+<header>
+  <img src="/logo.png" alt="LiveTV" class="hdr-logo" onerror="this.style.display='none'"/>
+  <div class="hdr-brand">
+    <h1>LiveTV</h1>
+    <p>PREMIUM IPTV PLAYER</p>
+  </div>
+  <div class="live-pill">
+    <span class="live-dot"></span>
+    LIVE
+  </div>
+  <span id="syncStatus">☁️ Cloud</span>
+</header>
+
+<!-- App Layout -->
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-head">
+      <!-- Search -->
+      <div class="srch-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+        </svg>
+        <input type="text" id="channel-search" placeholder="Search channels…"/>
       </div>
-
-      <div class="status-bar">
-        <span>&#x1F4E1;</span>
-        <span id="status-text">Initializing player&hellip;</span>
-        <button id="retry-btn" onclick="initPlayer()">&#x21BA; Retry</button>
+      <!-- Categories -->
+      <div class="cat-scroll" id="catTabs">
+        <button class="cat-tab active" data-cat="all">All</button>
+        <button class="cat-tab" data-cat="News">News</button>
+        <button class="cat-tab" data-cat="Sports">Sports</button>
+        <button class="cat-tab" data-cat="Entertainment">Entertainment</button>
+        <button class="cat-tab" data-cat="Music">Music</button>
+        <button class="cat-tab" data-cat="Kids">Kids</button>
+        <button class="cat-tab" data-cat="Movies">Movies</button>
+        <button class="cat-tab" data-cat="Other">Other</button>
       </div>
+      <!-- Count row -->
+      <div class="ch-count-row">
+        <span id="listCount">— channels</span>
+      </div>
+      <!-- Select all (admin only) -->
+      <div id="selectAllWrap">
+        <input type="checkbox" id="selectAllChk"/>
+        <label for="selectAllChk">Select All</label>
+        <span id="selectedCountDisplay"></span>
+      </div>
+    </div>
 
-      <div class="channel-info">
-        <img
-          class="channel-logo"
-          src="/FIFA-World-Cup-Logo-2026.png"
-          alt="FIFA World Cup 2026"
-          onerror="this.style.display='none'"
-        />
-        <div class="channel-details">
-          <h2>Football World Cup 2026 (4K)</h2>
-          <p>bein Sports &middot; TS Live Stream</p>
+    <!-- Channel list -->
+    <div id="listbar"></div>
+
+    <!-- Bulk delete bar -->
+    <div id="deleteSelectedBar">
+      <span id="selectedCount" style="font-weight:700;color:var(--danger);"></span>&nbsp;selected
+      <button class="btn btn-danger btn-sm" id="confirmDeleteBtn">🗑 Delete</button>
+      <button class="btn btn-ghost btn-sm" id="cancelDeleteBtn">Cancel</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- Video -->
+    <div class="player-wrap">
+      <video id="videoEl" controls autoplay muted playsinline></video>
+      <div class="overlay" id="playerOverlay">
+        <img src="/logo.png" alt="LiveTV" class="overlay-logo" onerror="this.style.display='none'"/>
+        <div class="spinner" id="spinnerEl"></div>
+        <div class="overlay-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Select a channel to watch
+        </div>
+        <p class="overlay-hint">Choose from the channel list on the left</p>
+      </div>
+    </div>
+
+    <!-- Now Playing Bar -->
+    <div class="np-bar">
+      <img id="npLogo" class="np-logo" src="/logo.png" alt="" onerror="this.style.display='none'"/>
+      <div class="np-info">
+        <div id="now-playing-title" style="color:var(--txt2);font-size:.85rem;font-weight:600;">No channel selected</div>
+        <div class="np-meta">
+          <span id="channel-category-badge"></span>
+          <span class="np-status-text" id="playerStatus">⏸ Ready</span>
+        </div>
+      </div>
+      <span class="np-kbps" id="kbpsDisplay"></span>
+    </div>
+
+    <!-- Compact Stats Row (no scroll) -->
+    <div class="info-wrap">
+      <div class="stats-row">
+        <div class="stat-card">
+          <span class="stat-lbl">Total</span>
+          <span class="stat-val" id="statTotal">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-lbl">Active</span>
+          <span class="stat-val ok" id="statActive">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-lbl">Hidden</span>
+          <span class="stat-val warn" id="statHidden">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-lbl">Offline</span>
+          <span class="stat-val danger" id="statOffline">0</span>
         </div>
       </div>
     </div>
 
-    <div class="info-box">
-      <h3>&#x2139;&#xFE0F; Troubleshooting</h3>
-      <ul>
-        <li>Black screen? The stream may use H.265/HEVC — Chrome only supports H.264.</li>
-        <li>CORS error? Use a browser extension or local proxy to bypass it.</li>
-        <li>Stream failed? Click <strong>Retry</strong> to reconnect.</li>
-        <li>Works in VLC but not here? VLC bypasses browser security rules.</li>
-      </ul>
-    </div>
-  </main>
+    <!-- Admin Panel Modal (full-screen overlay, no page scroll) -->
+    <div id="adminModal">
+      <div id="adminPanel">
 
-  <footer>
-    Football World Cup 2026 Live &mdash; Personal use only.
-    <br/>
-    Developed by <a href="https://www.facebook.com/mrsium20" target="_blank" rel="noopener"
-      style="color:#60a5fa;text-decoration:none;font-weight:600;">Maksudursium</a>
-  </footer>
+      <!-- Admin Panel inner content start -->
+        <!-- Admin header -->
+        <div class="adm-header">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <div>
+            <h2>Admin Control Panel</h2>
+            <p>Manage channels, sync &amp; settings</p>
+          </div>
+          <button class="adm-close-btn" id="adminCloseBtn">✕ Close</button>
+        </div>
+        <div class="adm-grid">
 
-  <script>
-    // ── Anti-Inspect Protection ──────────────────────────────────────────
-    (function () {
+        <!-- Add/Edit Channel -->
+        <div class="adm-section">
+          <div class="adm-sec-title">➕ Add / Edit Channel</div>
+          <form id="channelForm">
+            <input type="hidden" id="editIndex" value="-1"/>
+            <div class="form-grid">
+              <div class="fg">
+                <label>Channel Name *</label>
+                <input type="text" id="channelName" class="fi" placeholder="BTV National" required/>
+              </div>
+              <div class="fg">
+                <label>Category</label>
+                <select id="channelCategory" class="fi">
+                  <option value="News">News</option>
+                  <option value="Sports">Sports</option>
+                  <option value="Entertainment">Entertainment</option>
+                  <option value="Music">Music</option>
+                  <option value="Kids">Kids</option>
+                  <option value="Movies">Movies</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label>Logo URL</label>
+                <input type="text" id="channelLogo" class="fi" placeholder="https://…/logo.png"/>
+              </div>
+              <div class="fg">
+                <label>Status</label>
+                <select id="channelStatus" class="fi">
+                  <option value="active">Active</option>
+                  <option value="hidden">Hidden</option>
+                </select>
+              </div>
+              <div class="fg full">
+                <label>Stream URL *</label>
+                <input type="text" id="channelUrl" class="fi" placeholder="https://…/index.m3u8" required/>
+              </div>
+            </div>
+            <div class="btn-row" style="margin-top:7px;">
+              <button type="submit" class="btn btn-pri" id="saveBtn">💾 Save</button>
+              <button type="button" class="btn btn-ghost" id="cancelBtn">Cancel</button>
+            </div>
+          </form>
+        </div>
 
-      // 1. Block right-click
-      document.addEventListener('contextmenu', function (e) {
-        e.preventDefault();
-      });
+        <!-- Bulk Import -->
+        <div class="adm-section">
+          <div class="adm-sec-title">📦 Bulk Import</div>
+          <div class="fg">
+            <label>Paste M3U or JSON array</label>
+            <textarea id="bulkChannels" class="fi" placeholder="#EXTINF:-1 group-title=&quot;News&quot;,BTV&#10;https://stream.url/index.m3u8"></textarea>
+          </div>
+          <div class="btn-row" style="margin-top:6px;">
+            <button class="btn btn-pri btn-sm" id="bulkAddBtn">⬆️ Import</button>
+            <button class="btn btn-ghost btn-sm" id="clearBulkBtn">Clear</button>
+          </div>
+          <p class="result-msg" id="bulkResult"></p>
+        </div>
 
-      // 2. Block keyboard shortcuts
-      document.addEventListener('keydown', function (e) {
-        // F12
-        if (e.key === 'F12') { e.preventDefault(); return false; }
-        // Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+Shift+C
-        if (e.ctrlKey && e.shiftKey && ['I','i','J','j','C','c'].includes(e.key)) {
-          e.preventDefault(); return false;
-        }
-        // Ctrl+U (view source)
-        if (e.ctrlKey && ['U','u'].includes(e.key)) {
-          e.preventDefault(); return false;
-        }
-        // Ctrl+S (save page)
-        if (e.ctrlKey && ['S','s'].includes(e.key)) {
-          e.preventDefault(); return false;
-        }
-      });
+        <!-- Tools -->
+        <div class="adm-section">
+          <div class="adm-sec-title">🛠 Tools</div>
+          <div class="btn-row">
+            <button class="btn btn-ghost btn-sm" id="checkAllBtn">📡 Check All</button>
+            <button class="btn btn-ghost btn-sm" id="checkOfflineBtn">⚠️ Check Offline</button>
+            <button class="btn btn-ghost btn-sm" id="findDuplicatesBtn">🔍 Duplicates</button>
+            <button class="btn btn-danger btn-sm" id="deleteAllDuplicatesBtn">🗑 Del Dupes</button>
+            <button class="btn btn-danger btn-sm" id="deleteOfflineBtn">🗑 Del Offline</button>
+            <button class="btn btn-ok btn-sm" id="syncBtn">☁️ Sync Cloud</button>
+          </div>
+          <p class="result-msg" id="duplicateResults"></p>
+        </div>
 
-      // 3. Detect DevTools via window size difference
-      var devtoolsOpen = false;
-      var threshold    = 160;
-      function checkDevTools() {
-        var widthDiff  = window.outerWidth  - window.innerWidth;
-        var heightDiff = window.outerHeight - window.innerHeight;
-        if (widthDiff > threshold || heightDiff > threshold) {
-          if (!devtoolsOpen) {
-            devtoolsOpen = true;
-            document.body.innerHTML =
-              '<div style="display:flex;align-items:center;justify-content:center;' +
-              'height:100vh;background:#0a0a0f;color:#ef4444;font-family:Inter,sans-serif;' +
-              'font-size:1.5rem;font-weight:700;text-align:center;">' +
-              '🚫 Access Denied</div>';
-          }
-        } else {
-          devtoolsOpen = false;
-        }
-      }
-      setInterval(checkDevTools, 1000);
+        <!-- Change Password -->
+        <div class="adm-section">
+          <div class="adm-sec-title">🔒 Change Password</div>
+          <div class="pw-grid">
+            <div class="fg">
+              <label>New Password</label>
+              <input type="password" id="newPassword" class="fi" placeholder="New password"/>
+            </div>
+            <div class="fg">
+              <label>Confirm</label>
+              <input type="password" id="confirmPassword" class="fi" placeholder="Repeat"/>
+            </div>
+          </div>
+          <div class="btn-row" style="margin-top:10px;">
+            <button class="btn btn-pri btn-sm" id="changePasswordBtn">Update Password</button>
+          </div>
+          <p id="passwordChangeMsg" class="result-msg"></p>
+        </div>
 
-      // 4. Clear console periodically (not too aggressively — avoids JS thread stalling)
-      setInterval(function () {
+        <!-- Hidden compat spans -->
+        <span id="totalChannels"></span><span id="activeCount"></span>
+        <span id="hiddenCount"></span><span id="offlineCount"></span>
+        <span id="adminModeStatus"></span><span id="totalChannelCount"></span>
+        </div><!-- /adm-grid -->
+      </div><!-- /adminPanel -->
+    </div><!-- /adminModal -->
+  </div><!-- /main -->
+
+</div><!-- /app -->
+
+<!-- ══════════════════════════════════════════════════════
+     ANTI-INSPECT — Maximum Protection
+══════════════════════════════════════════════════════ -->
+<script>
+(function(){
+  'use strict';
+
+  /* 1. Disable right-click */
+  document.addEventListener('contextmenu', function(e){ e.preventDefault(); return false; });
+
+  /* 2. Disable keyboard shortcuts */
+  document.addEventListener('keydown', function(e){
+    // F12
+    if(e.key === 'F12'){ e.preventDefault(); e.stopPropagation(); return false; }
+    // Ctrl+Shift+I / J / C / K / E
+    if(e.ctrlKey && e.shiftKey && /^[ijckeoIJCKEO]$/.test(e.key)){ e.preventDefault(); return false; }
+    // Ctrl+U (view-source), Ctrl+S (save), Ctrl+P (print), Ctrl+A
+    if(e.ctrlKey && /^[uspaSUSPA]$/.test(e.key)){ e.preventDefault(); return false; }
+  });
+
+  /* 3. Window-size based DevTools detection */
+  var THRESHOLD = 160;
+  function killPage(){
+    document.documentElement.innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:center;'+
+      'height:100vh;background:#07070f;color:#ef4444;'+
+      'font-family:Inter,sans-serif;font-size:1.4rem;font-weight:700;text-align:center;">'+
+      '🚫 Access Denied</div>';
+    window.location.replace('about:blank');
+  }
+  function checkSize(){
+    var wDiff = window.outerWidth  - window.innerWidth;
+    var hDiff = window.outerHeight - window.innerHeight;
+    if(wDiff > THRESHOLD || hDiff > THRESHOLD){ killPage(); }
+  }
+  setInterval(checkSize, 600);
+
+  /* 4. Console object getter trick */
+  var _devOpen = false;
+  var _img = new Image();
+  Object.defineProperty(_img, 'id', {
+    get: function(){
+      _devOpen = true;
+      killPage();
+    }
+  });
+
+  /* 5. Debugger-based detection (fires when DevTools is open) */
+  function detectDebugger(){
+    var start = performance.now();
+    // eslint-disable-next-line no-debugger
+    debugger;
+    var end = performance.now();
+    if(end - start > 100){ killPage(); }
+  }
+  setInterval(detectDebugger, 3000);
+
+  /* 6. Console clear + deterrent */
+  setInterval(function(){
+    if(!_devOpen){
+      try{
         console.clear();
-        console.log('%cAccess Denied', 'color:red;font-size:40px;font-weight:bold;');
-      }, 5000);
-
-    })();
-    // ────────────────────────────────────────────────────────────────────
-  </script>
-
-  <script>
-    var STREAM_URL = window.location.origin + '/stream';
-    var video      = document.getElementById('video');
-    var statusEl   = document.getElementById('status-text');
-    var retryBtn   = document.getElementById('retry-btn');
-    var player     = null;
-
-    function setStatus(msg, type) {
-      statusEl.textContent = msg;
-      statusEl.className   = type || '';
+        console.log('%c🚫 Access Denied','color:red;font-size:36px;font-weight:900;');
+        console.log(_img);
+      }catch(e){}
     }
+  }, 800);
 
-    function destroyPlayer() {
-      if (!player) return;
-      try { player.unload(); }            catch(e) {}
-      try { player.detachMediaElement(); } catch(e) {}
-      try { player.destroy(); }           catch(e) {}
-      player = null;
+  /* 7. Disable text selection via CSS already on body, also via JS */
+  document.addEventListener('selectstart', function(e){ e.preventDefault(); });
+  document.addEventListener('dragstart',   function(e){ e.preventDefault(); });
+
+})();
+</script>
+
+<!-- ══════════════════════════════════════════════════════
+     IPTV ENGINE
+══════════════════════════════════════════════════════ -->
+<script>
+(function(){
+'use strict';
+
+// ════════════════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════════════════
+const JSONBIN_BIN_ID  = "6a56b2c0f5f4af5e298fa7b7";
+const JSONBIN_API_KEY = "$2a$10$SD3.k7m/sclxZ29/33WTsOiusGk/lBq7vxcIws5uDf4/JPIrtbiOC";
+
+// ── Route Detection: admin only via /admin ───────────
+const IS_ADMIN_ROUTE = (window.location.pathname === '/admin');
+
+// ════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════
+let ADMIN_PASSWORD    = localStorage.getItem('adminPassword') || "admin123";
+let hlsInstance       = null;
+let allChannels       = [];
+let activeCategory    = "all";
+let isAdminMode       = false;
+let editingIndex      = -1;
+let selectedIndexes   = [];
+let isChecking        = false;
+let currentIdx        = -1;
+
+// ── DOM ──────────────────────────────────────────────
+const listBar           = document.getElementById("listbar");
+const nowPlayingTitle   = document.getElementById("now-playing-title");
+const categoryBadge     = document.getElementById("channel-category-badge");
+const searchEl          = document.getElementById("channel-search");
+const catTabsEl         = document.getElementById("catTabs");
+const adminPanel        = document.getElementById("adminPanel");
+const adminModal        = document.getElementById("adminModal");
+const channelForm       = document.getElementById("channelForm");
+const channelName       = document.getElementById("channelName");
+const channelCategory   = document.getElementById("channelCategory");
+const channelStatus     = document.getElementById("channelStatus");
+const channelLogo       = document.getElementById("channelLogo");
+const channelUrl        = document.getElementById("channelUrl");
+const editIndex         = document.getElementById("editIndex");
+const saveBtn           = document.getElementById("saveBtn");
+const cancelBtn         = document.getElementById("cancelBtn");
+const statTotal         = document.getElementById("statTotal");
+const statActive        = document.getElementById("statActive");
+const statHidden        = document.getElementById("statHidden");
+const statOffline       = document.getElementById("statOffline");
+const bulkChannels      = document.getElementById("bulkChannels");
+const bulkAddBtn        = document.getElementById("bulkAddBtn");
+const checkAllBtn       = document.getElementById("checkAllBtn");
+const syncBtn           = document.getElementById("syncBtn");
+const syncStatus        = document.getElementById("syncStatus");
+const loadingBar        = document.getElementById("loadingBar");
+const clearBulkBtn      = document.getElementById("clearBulkBtn");
+const deleteSelectedBar = document.getElementById("deleteSelectedBar");
+const selectedCount     = document.getElementById("selectedCount");
+const confirmDeleteBtn  = document.getElementById("confirmDeleteBtn");
+const cancelDeleteBtn   = document.getElementById("cancelDeleteBtn");
+const bulkResult        = document.getElementById("bulkResult");
+const selectAllChk      = document.getElementById("selectAllChk");
+const selectAllWrap     = document.getElementById("selectAllWrap");
+const selCountDisplay   = document.getElementById("selectedCountDisplay");
+const findDupBtn        = document.getElementById("findDuplicatesBtn");
+const delDupBtn         = document.getElementById("deleteAllDuplicatesBtn");
+const dupResults        = document.getElementById("duplicateResults");
+const delOfflineBtn     = document.getElementById("deleteOfflineBtn");
+const checkOfflineBtn   = document.getElementById("checkOfflineBtn");
+const newPwEl           = document.getElementById("newPassword");
+const confPwEl          = document.getElementById("confirmPassword");
+const changePwBtn       = document.getElementById("changePasswordBtn");
+const pwChangeMsg       = document.getElementById("passwordChangeMsg");
+const checkResModal     = document.getElementById("checkResultsModal");
+const checkResList      = document.getElementById("checkResultsList");
+const closeResBtn       = document.getElementById("closeResultsBtn");
+const pwModal           = document.getElementById("passwordModal");
+const adminPwInput      = document.getElementById("adminPassword");
+const unlockBtn         = document.getElementById("unlockBtn");
+const cancelModalBtn    = document.getElementById("cancelModalBtn");
+const pwError           = document.getElementById("passwordError");
+const playerOverlay     = document.getElementById("playerOverlay");
+const videoEl           = document.getElementById("videoEl");
+const npLogo            = document.getElementById("npLogo");
+const playerStatus      = document.getElementById("playerStatus");
+const kbpsDisplay       = document.getElementById("kbpsDisplay");
+const spinnerEl         = document.getElementById("spinnerEl");
+const listCount         = document.getElementById("listCount");
+const adminCloseBtn     = document.getElementById("adminCloseBtn");
+
+// ════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════
+function getDefaultLogo(name){
+  const ch = name ? encodeURIComponent(name.charAt(0).toUpperCase()) : '?';
+  return `https://ui-avatars.com/api/?name=${ch}&background=7c5cfc&color=fff&size=80&bold=true`;
+}
+function showLoad(){ loadingBar.classList.add('show'); }
+function hideLoad(){ loadingBar.classList.remove('show'); }
+
+// ════════════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════════════
+function getDefaultChannels(){
+  return [
+    { name:"BTV National",   category:"News",   logo:"", url:"https://owrcovcrpy.gpcdn.net/bpk-tv/1709/output/index.m3u8",          status:"active", _status:"online" },
+    { name:"T Sports HD",    category:"Sports", logo:"", url:"https://bdixserver.tvhunter.top/ant1009/tracks-v1a1/index.m3u8",       status:"active", _status:"online" },
+    { name:"Somoy TV",       category:"News",   logo:"", url:"https://somoytv.com/stream.m3u8",                                      status:"active", _status:"online" },
+    { name:"Independent TV", category:"News",   logo:"", url:"https://independent.tv/stream.m3u8",                                  status:"active", _status:"online" }
+  ];
+}
+
+function sanitize(arr){
+  arr.forEach(ch=>{
+    if(!ch.logo) ch.logo = getDefaultLogo(ch.name);
+    if(!ch._status) ch._status = "unknown";
+  });
+}
+
+function loadLocal(){
+  const s = localStorage.getItem('tvChannels');
+  if(s){ try{ allChannels=JSON.parse(s); sanitize(allChannels); return true; }catch(e){} }
+  return false;
+}
+
+function saveLocal(){
+  localStorage.setItem('tvChannels', JSON.stringify(allChannels));
+  updateStats();
+}
+
+function updateStats(){
+  statTotal.textContent  = allChannels.length;
+  statActive.textContent = allChannels.filter(c=>c.status==='active').length;
+  statHidden.textContent = allChannels.filter(c=>c.status==='hidden').length;
+  statOffline.textContent= allChannels.filter(c=>c._status==='offline').length;
+}
+
+// ════════════════════════════════════════════════════
+// CLOUD
+// ════════════════════════════════════════════════════
+function syncCloud(){
+  showLoad();
+  syncStatus.textContent='☁️ Syncing…'; syncStatus.style.color='var(--warn)';
+  const data={channels:allChannels,password:ADMIN_PASSWORD,updatedAt:new Date().toISOString()};
+  fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`,{
+    method:'PUT',
+    headers:{'Content-Type':'application/json','X-Master-Key':JSONBIN_API_KEY},
+    body:JSON.stringify(data)
+  }).then(r=>r.json()).then(()=>{
+    hideLoad();
+    syncStatus.textContent='☁️ Synced ✅'; syncStatus.style.color='var(--ok)';
+    setTimeout(()=>{ syncStatus.textContent='☁️ Cloud'; syncStatus.style.color='var(--txt3)'; },3000);
+  }).catch(err=>{
+    hideLoad();
+    syncStatus.textContent='☁️ Failed ❌'; syncStatus.style.color='var(--danger)';
+    console.error(err);
+  });
+}
+
+function loadCloud(){
+  showLoad();
+  fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`,{
+    headers:{'X-Master-Key':JSONBIN_API_KEY}
+  }).then(r=>{ if(!r.ok) throw new Error('net'); return r.json(); })
+  .then(data=>{
+    hideLoad();
+    if(data.record && data.record.channels){
+      allChannels = data.record.channels; sanitize(allChannels);
+      if(data.record.password){ ADMIN_PASSWORD=data.record.password; localStorage.setItem('adminPassword',ADMIN_PASSWORD); }
+      saveLocal(); render(); updateStats();
+      syncStatus.textContent='☁️ Loaded ✅'; syncStatus.style.color='var(--ok)';
+      setTimeout(()=>{ syncStatus.textContent='☁️ Cloud'; syncStatus.style.color='var(--txt3)'; },3000);
     }
+  }).catch(err=>{
+    hideLoad(); console.log('Cloud fail',err);
+    if(!loadLocal()){ allChannels=getDefaultChannels(); saveLocal(); }
+    render(); updateStats();
+  });
+}
 
-    var connectTimer = null;
+// ════════════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════════════
+function getFiltered(){
+  const q = searchEl.value.toLowerCase();
+  return allChannels.filter((ch)=>{
+    if(activeCategory !== 'all' && ch.category !== activeCategory) return false;
+    if(q && !ch.name.toLowerCase().includes(q) && !(ch.category||'').toLowerCase().includes(q)) return false;
+    if(ch.status === 'hidden' && !isAdminMode) return false;
+    return true;
+  });
+}
 
-    function initPlayer() {
-      destroyPlayer();
-      if (connectTimer) { clearTimeout(connectTimer); connectTimer = null; }
-      retryBtn.style.display = 'none';
-      setStatus('Initializing player\u2026');
+function render(){
+  const filtered = getFiltered();
+  listCount.textContent = filtered.length + ' channel' + (filtered.length!==1?'s':'');
 
-      if (!mpegts.getFeatureList().mseLivePlayback) {
-        setStatus('Your browser does not support MPEG-TS (MSE).', 'error');
-        return;
+  if(!filtered.length){
+    listBar.innerHTML=`<div class="empty-state">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="12" cy="12" r="10"/><path d="M8 15s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/>
+      </svg><p>No channels found</p></div>`;
+    return;
+  }
+
+  listBar.innerHTML = filtered.map((ch,fi)=>{
+    const ri    = allChannels.indexOf(ch);
+    const logo  = ch.logo || getDefaultLogo(ch.name);
+    const isPlay= ri === currentIdx;
+    const isHide= ch.status === 'hidden';
+
+    const sBadge = ch._status==='online'  ? `<span class="badge b-on">ON</span>`
+                 : ch._status==='offline' ? `<span class="badge b-off">OFF</span>`
+                 :                          `<span class="badge b-unk">?</span>`;
+    const hBadge = isHide ? `<span class="badge b-hid">HID</span>` : '';
+
+    const cbHtml = isAdminMode
+      ? `<input type="checkbox" class="ch-select-cb" data-idx="${ri}" ${selectedIndexes.includes(ri)?'checked':''} onclick="event.stopPropagation()"/>`
+      : '';
+    const actHtml = isAdminMode
+      ? `<div class="ch-acts">
+           <button class="ch-act-btn" onclick="event.stopPropagation();editCh(${ri})">✏️</button>
+           <button class="ch-act-btn del" onclick="event.stopPropagation();deleteCh(${ri})">🗑</button>
+         </div>` : '';
+
+    return `<div class="ch-item${isPlay?' playing':''}${isHide?' hidden-ch':''}" style="animation-delay:${fi*0.02}s" onclick="playCh(${ri})">
+      ${cbHtml}
+      <img class="ch-logo" src="${logo}" alt="${ch.name}" onerror="this.src='${getDefaultLogo(ch.name)}'"/>
+      <div class="ch-info">
+        <div class="ch-name">${ch.name}</div>
+        <div class="ch-cat">${ch.category||'Uncategorized'}</div>
+      </div>
+      <div class="ch-right">${sBadge}${hBadge}${actHtml}</div>
+    </div>`;
+  }).join('');
+
+  // Bind checkboxes
+  listBar.querySelectorAll('.ch-select-cb').forEach(cb=>{
+    cb.addEventListener('change',()=>{
+      const idx=parseInt(cb.dataset.idx);
+      if(cb.checked){ if(!selectedIndexes.includes(idx)) selectedIndexes.push(idx); }
+      else{ selectedIndexes=selectedIndexes.filter(i=>i!==idx); }
+      updateBulkBar();
+    });
+  });
+}
+
+// ════════════════════════════════════════════════════
+// PLAYER
+// ════════════════════════════════════════════════════
+function setStatus(msg,type){
+  playerStatus.textContent=msg;
+  playerStatus.className='np-status-text'+(type?' '+type:'');
+}
+
+function playCh(idx){
+  if(idx<0||idx>=allChannels.length) return;
+  const ch = allChannels[idx];
+  currentIdx = idx;
+
+  nowPlayingTitle.textContent = ch.name;
+  nowPlayingTitle.style.color = 'var(--txt)';
+  categoryBadge.textContent   = ch.category;
+  categoryBadge.style.display = 'inline';
+  npLogo.src = ch.logo || getDefaultLogo(ch.name);
+  npLogo.style.display = 'block';
+  kbpsDisplay.textContent = '';
+
+  // Show spinner in overlay while loading
+  playerOverlay.classList.remove('off');
+  spinnerEl.classList.add('on');
+  playerOverlay.querySelector('.overlay-title').style.display = 'none';
+  playerOverlay.querySelector('.overlay-hint').style.display  = 'none';
+  setStatus('⏳ Connecting…','warn');
+
+  // Destroy old HLS
+  if(hlsInstance){ hlsInstance.destroy(); hlsInstance=null; }
+  videoEl.src='';
+
+  if(Hls.isSupported()){
+    hlsInstance = new Hls({
+      enableWorker:true,
+      lowLatencyMode:true,
+      backBufferLength:30,
+      maxBufferLength:15,
+    });
+    hlsInstance.loadSource(ch.url);
+    hlsInstance.attachMedia(videoEl);
+    hlsInstance.on(Hls.Events.MANIFEST_PARSED,()=>{
+      playerOverlay.classList.add('off');
+      spinnerEl.classList.remove('on');
+      videoEl.play()
+        .then(()=>setStatus('▶ Live','ok'))
+        .catch(()=>setStatus('⚠ Press play','warn'));
+    });
+    hlsInstance.on(Hls.Events.FRAG_CHANGED,()=>{
+      playerOverlay.classList.add('off');
+    });
+    hlsInstance.on(Hls.Events.ERROR,(e,data)=>{
+      if(data.fatal){
+        spinnerEl.classList.remove('on');
+        setStatus('❌ Error: '+data.type,'err');
+        playerOverlay.querySelector('.overlay-title').textContent='❌ Stream Error';
+        playerOverlay.querySelector('.overlay-title').style.display='flex';
+        playerOverlay.querySelector('.overlay-hint').textContent='Try another channel';
+        playerOverlay.querySelector('.overlay-hint').style.display='block';
+        playerOverlay.classList.remove('off');
       }
-
-      try {
-        player = mpegts.createPlayer({
-          type:              'mse',
-          isLive:            true,
-          url:               STREAM_URL,
-          enableWorker:      true,
-          liveBufferLatencyChasing: true,
-          liveBufferLatencyMaxLatency: 1.5,
-          liveBufferLatencyMinRemain: 0.3
-        });
-
-        player.attachMediaElement(video);
-        player.load();
-        setStatus('Connecting to stream\u2026 (this may take a few seconds)', 'warn');
-
-        // Auto-retry if stream doesn't start within 15 seconds
-        connectTimer = setTimeout(function () {
-          if (video.readyState < 3) {
-            setStatus('\u23F1 Slow connection \u2014 retrying\u2026', 'warn');
-            initPlayer();
-          }
-        }, 15000);
-
-        // Update status when stream metadata is received
-        player.on(mpegts.Events.MEDIA_INFO, function () {
-          if (connectTimer) { clearTimeout(connectTimer); connectTimer = null; }
-          setStatus('\u25B6 Stream ready \u2014 starting playback\u2026', 'ok');
-          video.play()
-            .then(function () { setStatus('\u25B6 Playing live stream', 'ok'); })
-            .catch(function () { setStatus('\u26A0 Autoplay blocked \u2014 press play on the player', 'warn'); });
-        });
-
-        // Show live stats when playing
-        player.on(mpegts.Events.STATISTICS_INFO, function (info) {
-          if (video.paused || video.ended) return;
-          if (info && info.speed !== undefined) {
-            var kbps = Math.round(info.speed / 1024 * 8);
-            setStatus('\u25B6 Playing live stream \u2014 ' + kbps + ' kbps', 'ok');
-          }
-        });
-
-        player.on(mpegts.Events.ERROR, function (type, detail) {
-          if (connectTimer) { clearTimeout(connectTimer); connectTimer = null; }
-          setStatus('Stream error: ' + type + ' \u2013 ' + detail, 'error');
-          retryBtn.style.display = 'inline-block';
-        });
-
-      } catch (err) {
-        setStatus('Failed to start: ' + err.message, 'error');
-        retryBtn.style.display = 'inline-block';
+    });
+    // Stats
+    videoEl.addEventListener('timeupdate',function(){
+      if(hlsInstance && hlsInstance.bandwidthEstimate){
+        const kbps=Math.round(hlsInstance.bandwidthEstimate/1000);
+        kbpsDisplay.textContent = kbps > 0 ? kbps+'kbps' : '';
       }
-    }
+    });
+  } else if(videoEl.canPlayType('application/vnd.apple.mpegurl')){
+    videoEl.src = ch.url;
+    playerOverlay.classList.add('off');
+    spinnerEl.classList.remove('on');
+    videoEl.play().then(()=>setStatus('▶ Live','ok')).catch(()=>setStatus('⚠ Press play','warn'));
+  } else {
+    spinnerEl.classList.remove('on');
+    setStatus('❌ HLS not supported','err');
+  }
+  render();
+}
+window.playCh = playCh;
 
-    initPlayer();
+// ════════════════════════════════════════════════════
+// ADMIN MODE — only accessible via /admin URL
+// ════════════════════════════════════════════════════
+function openAdminMode(){
+  isAdminMode = true;
+  adminModal.classList.add('on');
+  selectAllWrap.style.display = 'flex';
+  render();
+}
+function closeAdminMode(){
+  isAdminMode = false;
+  adminModal.classList.remove('on');
+  selectAllWrap.style.display = 'none';
+  selectedIndexes = [];
+  updateBulkBar();
+  render();
+}
 
-    // Keep server awake (prevents Render free-tier cold start delays)
-    setInterval(function () {
-      fetch('/ping').catch(function () {});
-    }, 5 * 60 * 1000); // every 5 minutes
-  </script>
+// If on /admin route, show password modal automatically
+if(IS_ADMIN_ROUTE){
+  document.addEventListener('DOMContentLoaded',()=>{});
+  // Show modal after cloud load
+  setTimeout(()=>{
+    pwModal.classList.add('on');
+    setTimeout(()=>adminPwInput.focus(),120);
+  },800);
+}
+
+unlockBtn.addEventListener('click',()=>{
+  if(adminPwInput.value === ADMIN_PASSWORD){
+    pwModal.classList.remove('on');
+    openAdminMode();
+  } else {
+    pwError.textContent = '❌ Wrong password';
+    adminPwInput.value='';
+    adminPwInput.focus();
+    // Shake animation
+    pwModal.querySelector('.modal-card').style.animation='none';
+    requestAnimationFrame(()=>{
+      pwModal.querySelector('.modal-card').style.animation='';
+    });
+  }
+});
+adminPwInput.addEventListener('keydown',e=>{ if(e.key==='Enter') unlockBtn.click(); });
+cancelModalBtn.addEventListener('click',()=>{ pwModal.classList.remove('on'); });
+
+// Close admin panel button
+adminCloseBtn.addEventListener('click', closeAdminMode);
+
+// ════════════════════════════════════════════════════
+// CRUD
+// ════════════════════════════════════════════════════
+channelForm.addEventListener('submit',e=>{
+  e.preventDefault();
+  const ch={
+    name:    channelName.value.trim(),
+    category:channelCategory.value,
+    logo:    channelLogo.value.trim() || getDefaultLogo(channelName.value.trim()),
+    url:     channelUrl.value.trim(),
+    status:  channelStatus.value,
+    _status: 'unknown'
+  };
+  const idx=parseInt(editIndex.value);
+  if(idx>=0){ ch._status=allChannels[idx]._status||'unknown'; allChannels[idx]=ch; }
+  else{ allChannels.push(ch); }
+  saveLocal(); render(); resetForm();
+});
+
+function resetForm(){
+  channelForm.reset(); editIndex.value=-1; editingIndex=-1;
+  saveBtn.textContent='💾 Save';
+}
+cancelBtn.addEventListener('click',resetForm);
+
+function editCh(idx){
+  const ch=allChannels[idx];
+  channelName.value=ch.name; channelCategory.value=ch.category;
+  channelLogo.value=ch.logo; channelUrl.value=ch.url; channelStatus.value=ch.status;
+  editIndex.value=idx; editingIndex=idx;
+  saveBtn.textContent='✏️ Update';
+  adminPanel.scrollIntoView({behavior:'smooth'});
+}
+window.editCh = editCh;
+
+function deleteCh(idx){
+  if(!confirm(`Delete "${allChannels[idx].name}"?`)) return;
+  allChannels.splice(idx,1);
+  if(currentIdx===idx) currentIdx=-1;
+  else if(currentIdx>idx) currentIdx--;
+  saveLocal(); render();
+}
+window.deleteCh = deleteCh;
+
+// ════════════════════════════════════════════════════
+// BULK DELETE
+// ════════════════════════════════════════════════════
+function updateBulkBar(){
+  selectedCount.textContent = selectedIndexes.length;
+  selCountDisplay.textContent = selectedIndexes.length>0 ? selectedIndexes.length+' sel':'';
+  deleteSelectedBar.classList.toggle('on', selectedIndexes.length>0);
+}
+confirmDeleteBtn.addEventListener('click',()=>{
+  if(!selectedIndexes.length) return;
+  if(!confirm(`Delete ${selectedIndexes.length} channels?`)) return;
+  allChannels=allChannels.filter((_,i)=>!selectedIndexes.includes(i));
+  selectedIndexes=[]; updateBulkBar(); selectAllChk.checked=false;
+  saveLocal(); render();
+});
+cancelDeleteBtn.addEventListener('click',()=>{
+  selectedIndexes=[]; updateBulkBar(); selectAllChk.checked=false; render();
+});
+selectAllChk.addEventListener('change',()=>{
+  selectedIndexes = selectAllChk.checked ? allChannels.map((_,i)=>i) : [];
+  updateBulkBar(); render();
+});
+
+// ════════════════════════════════════════════════════
+// BULK IMPORT
+// ════════════════════════════════════════════════════
+bulkAddBtn.addEventListener('click',()=>{
+  const raw=bulkChannels.value.trim();
+  if(!raw){ bulkResult.textContent='⚠ Paste M3U or JSON first'; return; }
+  let added=0;
+  if(raw.startsWith('[')){
+    try{
+      JSON.parse(raw).forEach(ch=>{
+        if(ch.name&&ch.url){
+          allChannels.push({name:ch.name,category:ch.category||'Other',logo:ch.logo||getDefaultLogo(ch.name),url:ch.url,status:ch.status||'active',_status:'unknown'});
+          added++;
+        }
+      });
+    }catch(e){ bulkResult.textContent='❌ Invalid JSON'; return; }
+  } else {
+    const lines=raw.split('\n'); let pend=null;
+    lines.forEach(l=>{
+      l=l.trim();
+      if(l.startsWith('#EXTINF')){
+        pend={name:'',category:'Other',logo:'',url:'',status:'active',_status:'unknown'};
+        const nm=l.match(/,(.+)$/); if(nm) pend.name=nm[1].trim();
+        const lg=l.match(/tvg-logo="([^"]+)"/); if(lg) pend.logo=lg[1];
+        const ca=l.match(/group-title="([^"]+)"/); if(ca) pend.category=ca[1];
+        if(!pend.logo) pend.logo=getDefaultLogo(pend.name);
+      } else if(l&&!l.startsWith('#')&&pend){
+        pend.url=l; allChannels.push(pend); added++; pend=null;
+      }
+    });
+  }
+  saveLocal(); render();
+  bulkResult.textContent=`✅ Added ${added} channels`;
+  bulkResult.style.color='var(--ok)';
+  bulkChannels.value='';
+});
+clearBulkBtn.addEventListener('click',()=>{ bulkChannels.value=''; bulkResult.textContent=''; });
+
+// ════════════════════════════════════════════════════
+// ONLINE CHECK
+// ════════════════════════════════════════════════════
+async function checkUrl(url){
+  try{
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),8000);
+    await fetch(url,{method:'HEAD',signal:ctrl.signal,mode:'no-cors'});
+    clearTimeout(tid); return true;
+  }catch(e){ return e.name!=='AbortError'; }
+}
+async function runCheck(chs){
+  if(isChecking) return;
+  isChecking=true;
+  checkResList.innerHTML='';
+  checkResModal.classList.add('on');
+  for(const ch of chs){
+    const ok=await checkUrl(ch.url);
+    ch._status=ok?'online':'offline';
+    const d=document.createElement('div');
+    d.className='cr-item '+(ok?'ok':'bad');
+    d.textContent=(ok?'✅':'❌')+' '+ch.name;
+    checkResList.appendChild(d);
+  }
+  isChecking=false;
+  saveLocal(); render();
+}
+checkAllBtn.addEventListener('click',    ()=>runCheck([...allChannels]));
+checkOfflineBtn.addEventListener('click',()=>runCheck(allChannels.filter(c=>c._status!=='online')));
+closeResBtn.addEventListener('click',   ()=>checkResModal.classList.remove('on'));
+
+// ════════════════════════════════════════════════════
+// DUPLICATES
+// ════════════════════════════════════════════════════
+findDupBtn.addEventListener('click',()=>{
+  const seen={},dups=[];
+  allChannels.forEach(ch=>{ const k=ch.url.trim(); if(seen[k]) dups.push(ch.name); else seen[k]=true; });
+  dupResults.textContent = dups.length ? `🔍 ${dups.length} dupes: ${dups.join(', ')}` : '✅ No duplicates';
+  dupResults.style.color = dups.length ? 'var(--warn)' : 'var(--ok)';
+});
+delDupBtn.addEventListener('click',()=>{
+  const seen=new Set(),uniq=[];
+  allChannels.forEach(ch=>{ const k=ch.url.trim(); if(!seen.has(k)){ seen.add(k); uniq.push(ch); }});
+  const rm=allChannels.length-uniq.length;
+  allChannels=uniq; saveLocal(); render();
+  dupResults.textContent=`🗑 Removed ${rm} dupes`; dupResults.style.color='var(--ok)';
+});
+delOfflineBtn.addEventListener('click',()=>{
+  const b=allChannels.length;
+  allChannels=allChannels.filter(c=>c._status!=='offline');
+  saveLocal(); render();
+  dupResults.textContent=`🗑 Removed ${b-allChannels.length} offline`; dupResults.style.color='var(--ok)';
+});
+
+// ════════════════════════════════════════════════════
+// CLOUD SYNC
+// ════════════════════════════════════════════════════
+syncBtn.addEventListener('click', syncCloud);
+
+// ════════════════════════════════════════════════════
+// CHANGE PASSWORD
+// ════════════════════════════════════════════════════
+changePwBtn.addEventListener('click',()=>{
+  const np=newPwEl.value, cp=confPwEl.value;
+  if(!np){ pwChangeMsg.textContent='❌ Enter new password'; pwChangeMsg.style.color='var(--danger)'; return; }
+  if(np!==cp){ pwChangeMsg.textContent='❌ Passwords do not match'; pwChangeMsg.style.color='var(--danger)'; return; }
+  ADMIN_PASSWORD=np; localStorage.setItem('adminPassword',ADMIN_PASSWORD);
+  pwChangeMsg.textContent='✅ Updated! Sync to cloud to persist.'; pwChangeMsg.style.color='var(--ok)';
+  newPwEl.value=''; confPwEl.value='';
+});
+
+// ════════════════════════════════════════════════════
+// CATEGORY TABS & SEARCH
+// ════════════════════════════════════════════════════
+catTabsEl.querySelectorAll('.cat-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    catTabsEl.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    activeCategory=tab.dataset.cat;
+    render();
+  });
+});
+searchEl.addEventListener('input', render);
+
+// ════════════════════════════════════════════════════
+// KEEP ALIVE
+// ════════════════════════════════════════════════════
+setInterval(()=>{ fetch('/ping').catch(()=>{}); }, 5*60*1000);
+
+// ════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════
+loadCloud();
+
+})();
+</script>
 
 </body>
 </html>
